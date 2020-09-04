@@ -1,1 +1,1 @@
-npx nodemon DEBUG=users:* npm start
+npx nodemon DEBUG=audit:* npm start
