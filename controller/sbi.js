@@ -1,21 +1,14 @@
 //var mongoose = require('mongoose');
-var User = require("../models/Users");
-var User_ = require("../controller/users");
 var error = require("../controller/errResulUtils");
 var result = require("../controller/errResulUtils");
-var Token = require("../controller/token");
+//var Token = require("../controller/token");
 var initializer = {};
 
-//recepitG is a json that includes  all data about the root transaction
-var receiptG;
-var candado =true;
-var statusV = {rootCreation:"rootCreation",
-			   admorCreation:"admorCreationInRootSC"};
 var blockchainAddress = "ws://host.docker.internal:7545";
 
 
 
-
+/*
 initializer.getAddContrR = function (par,resp) {
 	var r=result.someFieldIsEmpty(par);	
 	if (r==0){
@@ -45,9 +38,10 @@ initializer.getAddContrR = function (par,resp) {
 		res.send(error.jsonRespError(r));
 	}
 }
+*/
 
 
-
+/*
 initializer.getAddTransR = function (par,resp) {	
 	var r=result.someFieldIsEmpty(par);	
 	if (r==0){
@@ -77,11 +71,15 @@ initializer.getAddTransR = function (par,resp) {
 		res.send(error.jsonRespError(r));
 	}
 }
+*/
 
 
 //save root in the smart contract
-function createRootSC(req,resp){
+function createRootSC(req,fn){
 	//rootCreation involves create root in database and create a smart contract
+	//recepitG is a json that includes  all data about the root transaction
+	console.log("Ya entré");
+	var receiptG;
 	compiler = require('solc');
 	const fs = require('fs'); 
 	const rootSol = 'RootSC.sol';
@@ -111,7 +109,7 @@ function createRootSC(req,resp){
 	avoContract = contracts.rootSol.RootSC.abi; //it depends of the Contract name
 	byteCodeVeh = contracts.rootSol.RootSC.evm.bytecode.object; //it depends of the Contract name
 
-	address = req.body.addressU; //obtaining public key account
+	address = req.body.key; //obtaining public key account
 	var resultado = 0;
 	try{
 		var Web3 = require('web3');
@@ -121,63 +119,98 @@ function createRootSC(req,resp){
 	    rootContract.deploy({data: byteCodeVeh}).send({from: address, gas: 4700000
 	    	}, function(err, transactionHash){
 	    		if(err){
-	    			candado = true;
-        			resp.send(error.jsonRespError(60));
-        			return 60;
+	    			console.log("Entré pero hay error");
+        			receiptG = "error";
 	    		}
 	    	})
 	    	.on('receipt', function(receipt){
-	     		receiptG = receipt;
-	     	User_.save(req,receiptG.contractAddress,receiptG.transactionHash,statusV.rootCreation,resp,1); //add user to the database
+    			console.log("Entré no hay error");
+    			var y={
+					transactionHash:receipt.transactionHash,
+					contractAddress:receipt.contractAddress
+				};				
+	     		receiptG = y;
+	     		console.log(receiptG);
+	     		fn(receiptG);
 	     }).on('error', console.error); 
 	}catch(err){
 		resultado = 60;
+		receiptG = "error";
+		fn(receiptG);
 	}
-
-    return resultado;
 }
 
 
-
-function checkMutualExclusion(req,resp){
-	//Considerar variables estáticas por el número de peticiones
-	var res=0;
-	if(candado){ //only one thread must intro in this part
-		candado = false; 
-		User.find({status:statusV.rootCreation}).exec(function(err, users){
-			if(err){
-				candado = true;
-				resp.send(error.jsonRespError(53)); 
-			}
-	        if(users.length>0)
-	        { 
-	        	candado = true;
-			   	resp.send(error.jsonRespError(1)); 
-	        }else{
-				var answer = createRootSC(req,resp);
-				res = answer;	
-	        } 
-	    });
-	}else{		
-		res = 2; // error numer 2 is returned
-	}
-	return res;
+//Falta implementarla correctamente
+function audit(X,y,res){	
+	//Create an audit smart contract
+		tr = 1;
+	//******************************
+	var obj={
+			Tr:tr,
+			y:y
+		};
+	res.send(obj);
 }
 
-//this is the constructor of the root
-initializer.Root=function(req,res){
+//Falta implementarla correctamente
+function permit(){
+	//Checar servicio en microservicios Users
+	return 1;
+}
+
+
+function timeStamp(){
+	var today = new Date();
+	dateC=today.toISOString();
+	return dateC;
+}
+
+initializer.createRoot=function(req,res){
+	//Create the root smart contract
+	var y,r=0;
+	createRootSC(req,function(resul){
+		if(resul=="error"){
+			y="error";
+			r=60;
+		}else{
+			y=resul;
+		}
+		//Hacer un deploy para guardar los demás datos en la parte de auditoría
+		var X = req;
+		audit(X,y,res);
+		r=0;
+	});
+	return r;
+}
+
+
+/*
+initializer.Storing=function(req,res){
 	//We evaluate if some of the parameters are empty
-	//In case, return an error	
+	//In case, return 10, it indicates an error	
 	var r=result.someFieldIsEmpty(req);
-	if (r==0){
-		var resp = checkMutualExclusion(req,res);
+	if (r==0){ //0 means not fields are empty
+		var u = req.body.token;
+		var h = req.body.hash;
+		var t = req.body.typeTransaction;		
+		var TS = timeStamp();
+		var id = permit(u,t);
+		//var Tr = audit(u,h,t,TS,id);
+		var resp ={
+			token: u,
+			T: TS,
+			id:id,
+			Tr:Tr};
+			res.send(resp);
 		return resp;
 	}else{
 		return (r);
 	}
 }
+*/
 
-
+/*
 function createAdmorSC(req,res){
 	//createAdmorSC involves create Admor in database and add it within the root knowledge
 	compiler = require('solc');
@@ -240,8 +273,9 @@ function createAdmorSC(req,res){
 
     return resultado;
 }
+*/
 
-
+/*
 function getRegister(regS,tok,fn){		
 		Token.whoP(tok,function(answer){
 			if(answer.email==""){
@@ -272,7 +306,9 @@ function getRegister(regS,tok,fn){
 			}
 		});
 }
+*/
 
+/*
 //Create an administrator
 initializer.AddAdmor=function(req,res){
 	//We evaluate if some of the parameters are empty
@@ -314,6 +350,7 @@ initializer.AddAdmor=function(req,res){
 		res.send(error.jsonRespError(r)); //error code is sent as an answer
 	}
 }
+*/
 
 
 module.exports = initializer;
