@@ -13,7 +13,8 @@ var event = require('../controller/event.js');
 //************************************************
 
 //EVENT
-router.post('/exec/storing', event.storing); 
+router.get('/', event.default);
+//router.post('/exec/storing', event.storing); 
 //router.post('/exec/getAddContrR', event.getAddContrR);
 //router.post('/exec/getAddTransR', event.getAddTransR);
 //************************************************

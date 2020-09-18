@@ -126,8 +126,8 @@ function createRootSC(req,fn){
 	    	.on('receipt', function(receipt){
     			console.log("Entré no hay error");
     			var y={
-					transactionHash:receipt.transactionHash,
-					contractAddress:receipt.contractAddress
+					addTran:receipt.transactionHash,
+					addCont:receipt.contractAddress
 				};				
 	     		receiptG = y;
 	     		console.log(receiptG);
@@ -142,12 +142,16 @@ function createRootSC(req,fn){
 
 
 //Falta implementarla correctamente
-function audit(X,y,res){	
+function audit(X,y,res){
+	//Verifies in users microservice if Token has enough permitions
+	//permit(X.body.Token,X.body.typeOfOperation)
+
 	//Create an audit smart contract
 		tr = 1;
 	//******************************
 	var obj={
 			Tr:tr,
+			Token:X.body.Token,
 			y:y
 		};
 	res.send(obj);
@@ -351,6 +355,24 @@ initializer.AddAdmor=function(req,res){
 	}
 }
 */
+
+initializer.createAdmor=function(req,res){
+	var obj={
+			Tr:"Not implemented yet",
+			Token:req.body.Token,
+			y:"Not implemented yet"
+		};
+	res.send(obj);
+}
+
+initializer.createTUser=function(req,res){
+	var obj={
+			Tr:"Not implemented yet",
+			Token:req.body.Token,
+			y:"Not implemented yet"
+		};
+	res.send(obj);
+}
 
 
 module.exports = initializer;

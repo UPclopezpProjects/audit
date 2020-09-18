@@ -3,6 +3,14 @@ var error = require("../controller/errResulUtils");
 
 var initializer = {};
 
+initializer.default = function (req, res){
+	var obj = {
+		output: "This is not available yet"
+	};
+	res.send(obj);
+}
+
+
 initializer.storing = function (req, res){
 	var token=req.query.token;
 	var hash=req.query.hash;
@@ -12,8 +20,8 @@ initializer.storing = function (req, res){
 					typeTransaction:typeTransaction
 				  }
 			};
-	//res.send(obj);
-	
+	res.send(obj);
+	/*
 	var answerCode = sbi.Storing(obj,res);
 	if(answerCode!=0){ 
 		//it means that an error has happened
@@ -22,24 +30,32 @@ initializer.storing = function (req, res){
 	}else{//it means that an error number 0 happened, it is out our reach
 		//res.send("Answer:" + answerCode);
 	}
-	
+	*/
 }
 
 initializer.createUser = function (req, res){
+	var Token = req.query.Token;
 	var key=req.query.key;
-	var hash=req.query.hash;
 	var typeOfUser=req.query.typeOfUser;
+	var typeOfOperation=req.query.typeOfOperation;
+	var x1 = req.query.hashX;
 	var obj={body:{key:key,
-					hash:hash,
-					hash:hash,
-					typeOfUser:typeOfUser
+					typeOfUser:typeOfUser,
+					x1:x1,
+					Token:Token,
+					typeOfOperation:typeOfOperation
 				  }
 			};
 	//res.send(obj);
 	var answerCode;
 	switch(typeOfUser){
-		case "1":
+		case "Root":
 			answerCode = sbi.createRoot(obj,res);
+			break;
+		case "Administrator":
+			answerCode = sbi.createAdmor(obj,res);
+		case "TUser":
+			answerCode = sbi.createTUser(obj,res);
 			break;
 		default:
 			answerCode = 31;
