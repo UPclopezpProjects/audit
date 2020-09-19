@@ -357,19 +357,27 @@ initializer.AddAdmor=function(req,res){
 */
 
 initializer.createAdmor=function(req,res){
+	var y={
+					addTran:"Not implemented yet",
+					addCont:"Not implemented yet"
+	};
 	var obj={
 			Tr:"Not implemented yet",
 			Token:req.body.Token,
-			y:"Not implemented yet"
+			y:y
 		};
 	res.send(obj);
 }
 
 initializer.createTUser=function(req,res){
+	var y={
+					addTran:"Not implemented yet",
+					addCont:"Not implemented yet"
+	};
 	var obj={
 			Tr:"Not implemented yet",
 			Token:req.body.Token,
-			y:"Not implemented yet"
+			y:y
 		};
 	res.send(obj);
 }
