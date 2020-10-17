@@ -140,11 +140,15 @@ function createRootSC(req,fn){
 	}
 }
 
-
 //Falta implementarla correctamente
-function audit(X,y,res){
+function hasAccess(token,typeOfOperation){
 	//Verifies in users microservice if Token has enough permitions
-	//permit(X.body.Token,X.body.typeOfOperation)
+	return true;
+}
+
+
+function audit(X,y,res){
+	var r=hasAccess(X.body.Token,X.body.typeOfOperation);
 
 	//Create an audit smart contract
 		tr = 1;

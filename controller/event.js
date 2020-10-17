@@ -34,11 +34,11 @@ initializer.storing = function (req, res){
 }
 
 initializer.createUser = function (req, res){
-	var Token = req.query.Token;
-	var key=req.query.key;
-	var typeOfUser=req.query.typeOfUser;
-	var typeOfOperation=req.query.typeOfOperation;
-	var x1 = req.query.hashX;
+	var Token = req.body.Token;
+	var key=req.body.key;
+	var typeOfUser=req.body.typeOfUser;
+	var typeOfOperation=req.body.typeOfOperation;
+	var x1 = req.body.hashX;
 	var obj={body:{key:key,
 					typeOfUser:typeOfUser,
 					x1:x1,
@@ -47,6 +47,7 @@ initializer.createUser = function (req, res){
 				  }
 			};
 	//res.send(obj);
+	console.log(typeOfUser);
 	var answerCode;
 	switch(typeOfUser){
 		case "Root":
