@@ -23,9 +23,9 @@ initializer.storing = function (req, res){
 	res.send(obj);
 	/*
 	var answerCode = sbi.Storing(obj,res);
-	if(answerCode!=0){ 
+	if(answerCode!=0){
 		//it means that an error has happened
-		//These erros are controlled when not callback functions are implemented yet 
+		//These erros are controlled when not callback functions are implemented yet
 		res.send(error.jsonRespError(answerCode)); //error code is sent as an answer
 	}else{//it means that an error number 0 happened, it is out our reach
 		//res.send("Answer:" + answerCode);
@@ -38,10 +38,10 @@ initializer.createUser = function (req, res){
 	var key=req.body.key;
 	var typeOfUser=req.body.typeOfUser;
 	var typeOfOperation=req.body.typeOfOperation;
-	var x1 = req.body.hashX;
+	var hashX = req.body.hashX;
 	var obj={body:{key:key,
 					typeOfUser:typeOfUser,
-					x1:x1,
+					hashX:hashX,
 					Token:Token,
 					typeOfOperation:typeOfOperation
 				  }
@@ -51,6 +51,7 @@ initializer.createUser = function (req, res){
 	var answerCode;
 	switch(typeOfUser){
 		case "Root":
+			//res.send("OK");
 			answerCode = sbi.createRoot(obj,res);
 			break;
 		case "Administrator":
@@ -60,16 +61,16 @@ initializer.createUser = function (req, res){
 			break;
 		default:
 			answerCode = 31;
-	}	
-	
-	if(answerCode!=0){ 
+	}
+
+	if(answerCode!=0){
 		//it means that an error has happened
-		//These erros are controlled when not callback functions are implemented yet 
+		//These erros are controlled when not callback functions are implemented yet
 		res.send(error.jsonRespError(answerCode)); //error code is sent as an answer
 	}else{//it means that an error number 0 happened, it is out our reach
 		//res.send("Answer:" + answerCode);
 	}
-	
+
 }
 
 

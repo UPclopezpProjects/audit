@@ -1,4 +1,5 @@
 //var mongoose = require('mongoose');
+var axios = require('axios');
 var error = require("../controller/errResulUtils");
 var result = require("../controller/errResulUtils");
 //var Token = require("../controller/token");
@@ -10,7 +11,7 @@ var blockchainAddress = "ws://host.docker.internal:7545";
 
 /*
 initializer.getAddContrR = function (par,resp) {
-	var r=result.someFieldIsEmpty(par);	
+	var r=result.someFieldIsEmpty(par);
 	if (r==0){
 		var tok=par.body.token;
 		Token.whoP(tok,function(answer){
@@ -21,16 +22,16 @@ initializer.getAddContrR = function (par,resp) {
 						if(err){
 							resp.send(error.jsonRespError(50));
 						}
-				        if(users.length>0 && users.length<2){ 
+				        if(users.length>0 && users.length<2){
 				        	if(answer.email==users[0].email){ //we check that the token match with the root
 				        		res = users[0].addressContract;
 			        			resp.send(result.jsonRespOK(2,res));
 		        			}else{
 	        					resp.send(error.jsonRespError(4));
 	        				}
-				        }else{			
+				        }else{
 							resp.send(error.jsonRespError(100));
-				        } 
+				        }
 				    });
 			}
 		});
@@ -42,8 +43,8 @@ initializer.getAddContrR = function (par,resp) {
 
 
 /*
-initializer.getAddTransR = function (par,resp) {	
-	var r=result.someFieldIsEmpty(par);	
+initializer.getAddTransR = function (par,resp) {
+	var r=result.someFieldIsEmpty(par);
 	if (r==0){
 		var tok=par.body.token;
 		Token.whoP(tok,function(answer){
@@ -54,16 +55,16 @@ initializer.getAddTransR = function (par,resp) {
 						if(err){
 							resp.send(error.jsonRespError(50));
 						}
-				        if(users.length>0 && users.length<2){ 
+				        if(users.length>0 && users.length<2){
 				        	if(answer.email==users[0].email){ //we check that the token match with the root
 				        		res = users[0].addressTransaction;
 			        			resp.send(result.jsonRespOK(3,res));
 		        			}else{
 	        					resp.send(error.jsonRespError(4));
 	        				}
-				        }else{			
+				        }else{
 							resp.send(error.jsonRespError(100));
-				        } 
+				        }
 				    });
 			}
 		});
@@ -78,17 +79,17 @@ initializer.getAddTransR = function (par,resp) {
 function createRootSC(req,fn){
 	//rootCreation involves create root in database and create a smart contract
 	//recepitG is a json that includes  all data about the root transaction
-	console.log("Ya entré");
+	console.log("OK");
 	var receiptG;
 	compiler = require('solc');
-	const fs = require('fs'); 
-	const rootSol = 'RootSC.sol';
+	const fs = require('fs');
+	const rootSol = 'all.sol';
 	sourceCode = fs.readFileSync(rootSol, 'UTF8').toString();
-	const path = require('path');	
+	const path = require('path');
 	const solc = require('solc');
-	const veh = path.resolve('', '', rootSol);
-	const source = fs.readFileSync(veh, 'UTF-8');
-	
+	const roo = path.resolve('', '', rootSol);
+	//console.log(roo);
+	const source = fs.readFileSync(roo, 'UTF-8');
 	var input = {
 	    language: 'Solidity',
 	    sources: {
@@ -103,24 +104,28 @@ function createRootSC(req,fn){
 	            }
 	        }
 	    }
-	}; 
+	};
 	compiledCode = JSON.parse(solc.compile(JSON.stringify(input)));
+	console.log(compiledCode);
+
 	contracts = compiledCode.contracts;
-	avoContract = contracts.rootSol.RootSC.abi; //it depends of the Contract name
-	byteCodeVeh = contracts.rootSol.RootSC.evm.bytecode.object; //it depends of the Contract name
+	avoContract = contracts.rootSol.Root.abi; //it depends of the Contract name
+	byteCodeRoot = contracts.rootSol.Root.evm.bytecode.object; //it depends of the Contract name
 
 	address = req.body.key; //obtaining public key account
+	//console.log(address);
 	var resultado = 0;
 	try{
 		var Web3 = require('web3');
 		var web3 = new Web3(Web3.givenProvider || blockchainAddress);
 
 		rootContract = new web3.eth.Contract(avoContract);
-	    rootContract.deploy({data: byteCodeVeh}).send({from: address, gas: 4700000
+	    rootContract.deploy({data: byteCodeRoot}).send({from: address, gas: 4700000
 	    	}, function(err, transactionHash){
 	    		if(err){
 	    			console.log("Entré pero hay error");
         			receiptG = "error";
+							fn(receiptG);
 	    		}
 	    	})
 	    	.on('receipt', function(receipt){
@@ -128,11 +133,11 @@ function createRootSC(req,fn){
     			var y={
 					addTran:receipt.transactionHash,
 					addCont:receipt.contractAddress
-				};				
+				};
 	     		receiptG = y;
 	     		console.log(receiptG);
 	     		fn(receiptG);
-	     }).on('error', console.error); 
+	     }).on('error', console.error);
 	}catch(err){
 		resultado = 60;
 		receiptG = "error";
@@ -142,22 +147,53 @@ function createRootSC(req,fn){
 
 //Falta implementarla correctamente
 function hasAccess(token,typeOfOperation){
+	var respuesta = false;
 	//Verifies in users microservice if Token has enough permitions
-	return true;
+	var host = 'host.docker.internal';
+	var port = '3001';
+	var path = '/hasAccess';
+	var email = "tuser@algo.com";
+	var url = 'http://'+host+':'+port+''+path+'';
+	axios.post(url, {
+			token: token,
+			typeOfOperation:typeOfOperation
+	})
+	.then(response => {
+			console.log(response.data);
+			respuesta = true;
+			//data = response.data;
+			//next(data, null);
+	})
+	.catch(error => {
+			console.log(error);
+			respuesta=false;
+			//next(null, error);
+	});
+	return respuesta;
 }
 
 
-function audit(X,y,res){
-	var r=hasAccess(X.body.Token,X.body.typeOfOperation);
 
-	//Create an audit smart contract
-		tr = 1;
-	//******************************
-	var obj={
-			Tr:tr,
-			Token:X.body.Token,
-			y:y
-		};
+
+
+
+function audit(X,y,res){
+	//var r=hasAccess(X.body.Token,X.body.typeOfOperation);
+	var r = true;
+	if(r){
+		var obj={
+					Token:X.body.Token,
+					addTran: y.addTran,
+					addCont: y.addCont
+				};
+	}else {
+		var obj={
+					Error: "Yes",
+					Token:X.body.Token,
+					addTran: "Error",
+					addCont: "Error"
+				};
+	}
 	res.send(obj);
 }
 
@@ -179,15 +215,26 @@ initializer.createRoot=function(req,res){
 	var y,r=0;
 	createRootSC(req,function(resul){
 		if(resul=="error"){
-			y="error";
+			y="Error";
 			r=60;
 		}else{
 			y=resul;
 		}
-		//Hacer un deploy para guardar los demás datos en la parte de auditoría
 		var X = req;
-		audit(X,y,res);
-		r=0;
+		if(r==60){
+			r=0;
+			var obj={
+					Tr:"Error",
+					Token:X.body.Token,
+					addTran:y,
+					addCont:y};
+				res.send(obj);
+		}else{
+			//Hacer un deploy para guardar los demás datos en la parte de auditoría
+			r=0;
+			audit(X,y,res);
+		}
+
 	});
 	return r;
 }
@@ -196,12 +243,12 @@ initializer.createRoot=function(req,res){
 /*
 initializer.Storing=function(req,res){
 	//We evaluate if some of the parameters are empty
-	//In case, return 10, it indicates an error	
+	//In case, return 10, it indicates an error
 	var r=result.someFieldIsEmpty(req);
 	if (r==0){ //0 means not fields are empty
 		var u = req.body.token;
 		var h = req.body.hash;
-		var t = req.body.typeTransaction;		
+		var t = req.body.typeTransaction;
 		var TS = timeStamp();
 		var id = permit(u,t);
 		//var Tr = audit(u,h,t,TS,id);
@@ -222,14 +269,14 @@ initializer.Storing=function(req,res){
 function createAdmorSC(req,res){
 	//createAdmorSC involves create Admor in database and add it within the root knowledge
 	compiler = require('solc');
-	const fs = require('fs'); 
+	const fs = require('fs');
 	const rootSol = 'RootSC.sol';
 	sourceCode = fs.readFileSync(rootSol, 'UTF8').toString();
-	const path = require('path');	
+	const path = require('path');
 	const solc = require('solc');
 	const veh = path.resolve('', '', rootSol);
 	const source = fs.readFileSync(veh, 'UTF-8');
-	
+
 	var input = {
 	    language: 'Solidity',
 	    sources: {
@@ -244,7 +291,7 @@ function createAdmorSC(req,res){
 	            }
 	        }
 	    }
-	}; 
+	};
 	compiledCode = JSON.parse(solc.compile(JSON.stringify(input)));
 	contracts = compiledCode.contracts;
 	rContract = contracts.rootSol.RootSC.abi; //it depends of the Contract name
@@ -262,7 +309,7 @@ function createAdmorSC(req,res){
 		//Adding Administrator in the blockchain*******************************
 		//Object rootContract is created from abi template and the contract address
 		var rootContract = new web3.eth.Contract(rContract, addressContract);
-		rootContract.methods.addAdmor(addressA).send({from: addressR,gas: 4700000}, 
+		rootContract.methods.addAdmor(addressA).send({from: addressR,gas: 4700000},
 			function(err, transactionHash){
 	    		if(err){
         			res.send(error.jsonResp(60));
@@ -284,7 +331,7 @@ function createAdmorSC(req,res){
 */
 
 /*
-function getRegister(regS,tok,fn){		
+function getRegister(regS,tok,fn){
 		Token.whoP(tok,function(answer){
 			if(answer.email==""){
 				fn("");
@@ -294,9 +341,9 @@ function getRegister(regS,tok,fn){
 					if(err){
 						fn("");
 					}
-			        if(users.length>0 && users.length<2){ 
+			        if(users.length>0 && users.length<2){
 			        	if(answer.email==users[0].email){ //we check that the token user match with the search
-			        		res = users[0].addressContract;		        			
+			        		res = users[0].addressContract;
 	        				var answerR = {	email:users[0].email,
 			                    				addressU:users[0].addressU,
 			                    				addressContract:users[0].addressContract,
@@ -307,9 +354,9 @@ function getRegister(regS,tok,fn){
 	        			}else{
 	        					fn("");
         				}
-			        }else{			
+			        }else{
 						fn("");
-			        } 
+			        }
 			    });
 			}
 		});
@@ -320,9 +367,9 @@ function getRegister(regS,tok,fn){
 //Create an administrator
 initializer.AddAdmor=function(req,res){
 	//We evaluate if some of the parameters are empty
-	//In case, return an error	
+	//In case, return an error
 	var r=result.someFieldIsEmpty(req);
-	if (r==0){		
+	if (r==0){
 		//First, we must verify that token is linked with the root
 		//To do tat, we are going to form an objet with the search
 		var search = {email:"",
@@ -330,7 +377,7 @@ initializer.AddAdmor=function(req,res){
 		getRegister(search,req.body.token,function(resultado){
 			if(resultado==""){
 				res.send(error.jsonRespError(4)); //error code is sent as an answer
-			}else{				
+			}else{
 				//Avoid that an existence administrator can be duplicated in offchain
 				var searchEmail = {email:req.body.email};
 				User.find(searchEmail).exec(function(err, users){
@@ -348,8 +395,8 @@ initializer.AddAdmor=function(req,res){
 								req.body.addressContract = resultado.addressContract;
 								//With all ingredients, we can create the AdmorSC
 								var answer = createAdmorSC(req,res);
-							}						
-						});						
+							}
+						});
 					}
 				});
 			}

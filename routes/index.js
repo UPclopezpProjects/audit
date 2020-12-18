@@ -14,16 +14,13 @@ var event = require('../controller/event.js');
 
 //EVENT
 router.get('/', event.default);
-//router.post('/exec/storing', event.storing); 
+//router.post('/exec/storing', event.storing);
 //router.post('/exec/getAddContrR', event.getAddContrR);
 //router.post('/exec/getAddTransR', event.getAddTransR);
 //************************************************
 
 //Create users
-router.post('/exec/createUser', event.createUser); 
+router.post('/exec/createUserSC', event.createUser); 
 
 
 module.exports = router;
-
-
-
