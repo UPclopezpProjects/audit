@@ -57,6 +57,11 @@ initializer.createUser = function (req, res){
 		case "Administrator":
 			answerCode = sbi.createAdmor(obj,res);
 		case "TUser":
+		case "Productor":
+		case "Acopio":
+		case "Carrier":
+		case "Merchant":
+		case "Consumer":		
 			answerCode = sbi.createTUser(obj,res);
 			break;
 		default:

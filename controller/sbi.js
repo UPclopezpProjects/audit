@@ -9,6 +9,7 @@ var blockchainAddress = "ws://host.docker.internal:7545";
 
 
 
+
 /*
 initializer.getAddContrR = function (par,resp) {
 	var r=result.someFieldIsEmpty(par);
@@ -117,7 +118,9 @@ function createRootSC(req,fn){
 	var resultado = 0;
 	try{
 		var Web3 = require('web3');
-		var web3 = new Web3(Web3.givenProvider || blockchainAddress);
+		var ganache = require("ganache");
+		//var web3 = new Web3(Web3.givenProvider || blockchainAddress);
+		var web3 = new Web3(ganache.provider());
 
 		rootContract = new web3.eth.Contract(avoContract);
 	    rootContract.deploy({data: byteCodeRoot}).send({from: address, gas: 4700000
