@@ -10,7 +10,7 @@ initializer.default = function (req, res){
 	res.send(obj);
 }
 
-
+/*
 initializer.storing = function (req, res){
 	var token=req.query.token;
 	var hash=req.query.hash;
@@ -21,58 +21,79 @@ initializer.storing = function (req, res){
 				  }
 			};
 	res.send(obj);
-	/*
-	var answerCode = sbi.Storing(obj,res);
-	if(answerCode!=0){
-		//it means that an error has happened
-		//These erros are controlled when not callback functions are implemented yet
-		res.send(error.jsonRespError(answerCode)); //error code is sent as an answer
-	}else{//it means that an error number 0 happened, it is out our reach
-		//res.send("Answer:" + answerCode);
-	}
-	*/
+
 }
+*/
+/*
+initializer.createUser = function (req, res){
+	res.send("Proof");
+}*/
 
 initializer.createUser = function (req, res){
-	var Token = req.body.Token;
+	var S = req.body.source;
+	var keyF=req.body.keyF;
 	var key=req.body.key;
-	var typeOfUser=req.body.typeOfUser;
-	var typeOfOperation=req.body.typeOfOperation;
-	var hashX = req.body.hashX;
-	var obj={body:{key:key,
-					typeOfUser:typeOfUser,
-					hashX:hashX,
-					Token:Token,
-					typeOfOperation:typeOfOperation
-				  }
+	var data = req.body.data;
+	var Tu = req.body.Tu;
+	var Nu = req.body.Nu;
+	var To = req.body.To;
+	var obj={body:
+						{
+							S:S,
+							keyF:keyF,
+							key:key,
+							data:data,
+							Tu:Tu,
+							Nu:Nu,
+							To:To
+						}
 			};
-	//res.send(obj);
-	console.log(typeOfUser);
-	var answerCode;
-	switch(typeOfUser){
-		case "Root":
-			//res.send("OK");
-			answerCode = sbi.createRoot(obj,res);
-			break;
-		case "Administrator":
-			answerCode = sbi.createAdmor(obj,res);
-		case "TUser":
-			answerCode = sbi.createTUser(obj,res);
-			break;
-		default:
-			answerCode = 31;
-	}
-
-	if(answerCode!=0){
-		//it means that an error has happened
-		//These erros are controlled when not callback functions are implemented yet
-		res.send(error.jsonRespError(answerCode)); //error code is sent as an answer
-	}else{//it means that an error number 0 happened, it is out our reach
-		//res.send("Answer:" + answerCode);
-	}
-
+			sbi.deploy(obj,function(resul){
+				res.send(resul);
+			});
 }
 
+
+initializer.getLog = function (req, res){
+	var Atr = req.body.Atr;
+	var Acs = req.body.Acs;
+	var token=req.body.token;
+	var obj={body:
+						{
+							Atr:Atr,
+							Acs:Acs,
+							token:token
+						}
+			};
+	console.log(obj)		
+	sbi.findLog(obj,function(resul){
+				res.send(resul);
+	});
+}
+
+initializer.addEvent = function (req, res){
+	var typeEvent = req.body.typeEvent;
+	var source = req.body.source;
+	var token = req.body.token;
+	var eventDescription=req.body.eventDescription;
+	var Asc=req.body.Asc;
+	var key=req.body.key;
+
+	var obj={body:
+						{
+							typeEvent:typeEvent,	
+							source:source,
+							token:token,
+							eventDescription:eventDescription,
+							Asc:Asc,
+							key:key
+						}
+			};
+	console.log(obj)		
+			sbi.addEvent(obj,function(resul){
+				res.send(resul);
+			});
+}
 
 
 module.exports = initializer;

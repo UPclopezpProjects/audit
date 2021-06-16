@@ -7,93 +7,27 @@ var initializer = {};
 
 var blockchainAddress = "ws://host.docker.internal:7545";
 
-
-
-/*
-initializer.getAddContrR = function (par,resp) {
-	var r=result.someFieldIsEmpty(par);
-	if (r==0){
-		var tok=par.body.token;
-		Token.whoP(tok,function(answer){
-			if(answer.email==""){
-				resp.send(error.jsonRespError(70));
-			}else{
-					User.find({status:statusV.rootCreation}).exec(function(err, users){
-						if(err){
-							resp.send(error.jsonRespError(50));
-						}
-				        if(users.length>0 && users.length<2){
-				        	if(answer.email==users[0].email){ //we check that the token match with the root
-				        		res = users[0].addressContract;
-			        			resp.send(result.jsonRespOK(2,res));
-		        			}else{
-	        					resp.send(error.jsonRespError(4));
-	        				}
-				        }else{
-							resp.send(error.jsonRespError(100));
-				        }
-				    });
-			}
-		});
-	}else{
-		res.send(error.jsonRespError(r));
-	}
+function timeStamp(){
+	var today = new Date();
+	dateC=today.toISOString();
+	return dateC;
 }
-*/
 
 
-/*
-initializer.getAddTransR = function (par,resp) {
-	var r=result.someFieldIsEmpty(par);
-	if (r==0){
-		var tok=par.body.token;
-		Token.whoP(tok,function(answer){
-			if(answer.email==""){
-				res.send(error.jsonRespError(70));
-			}else{
-					User.find({status:statusV.rootCreation}).exec(function(err, users){
-						if(err){
-							resp.send(error.jsonRespError(50));
-						}
-				        if(users.length>0 && users.length<2){
-				        	if(answer.email==users[0].email){ //we check that the token match with the root
-				        		res = users[0].addressTransaction;
-			        			resp.send(result.jsonRespOK(3,res));
-		        			}else{
-	        					resp.send(error.jsonRespError(4));
-	        				}
-				        }else{
-							resp.send(error.jsonRespError(100));
-				        }
-				    });
-			}
-		});
-	}else{
-		res.send(error.jsonRespError(r));
-	}
-}
-*/
-
-
-//save root in the smart contract
-function createRootSC(req,fn){
-	//rootCreation involves create root in database and create a smart contract
-	//recepitG is a json that includes  all data about the root transaction
-	console.log("OK");
-	var receiptG;
-	compiler = require('solc');
+function getContractObject(){
+	var compiler = require('solc');
 	const fs = require('fs');
-	const rootSol = 'all.sol';
-	sourceCode = fs.readFileSync(rootSol, 'UTF8').toString();
+	const userSol = 'UserEvents.sol';
+	sourceCode = fs.readFileSync(userSol, 'UTF8').toString();
 	const path = require('path');
 	const solc = require('solc');
-	const roo = path.resolve('', '', rootSol);
+	const roo = path.resolve('', '', userSol);
 	//console.log(roo);
 	const source = fs.readFileSync(roo, 'UTF-8');
 	var input = {
 	    language: 'Solidity',
 	    sources: {
-	        rootSol : {
+	        userSol : {
 	            content: source
 	        }
 	    },
@@ -106,21 +40,32 @@ function createRootSC(req,fn){
 	    }
 	};
 	compiledCode = JSON.parse(solc.compile(JSON.stringify(input)));
-	console.log(compiledCode);
+	//console.log(compiledCode);
+	return compiledCode.contracts;
+}
 
-	contracts = compiledCode.contracts;
-	avoContract = contracts.rootSol.Root.abi; //it depends of the Contract name
-	byteCodeRoot = contracts.rootSol.Root.evm.bytecode.object; //it depends of the Contract name
+//save user in the smart contract
+function createSC(req,fn){
+	console.log("OK");
+	var receiptG;
+	contracts = getContractObject();
+	avoContract = contracts.userSol.User.abi; //it depends of the Contract name
+	byteCodeRoot = contracts.userSol.User.evm.bytecode.object; //it depends of the Contract name
 
-	address = req.body.key; //obtaining public key account
+	sA = req.body.S;
+	keyF = req.body.keyF;
+	key = req.body.key; //obtaining public key account
+	data = req.body.data; //obtaining public key account
+	tuA = req.body.Tu;
+	nuA = req.body.Nu;
+	toA = req.body.To;
 	//console.log(address);
 	var resultado = 0;
 	try{
 		var Web3 = require('web3');
 		var web3 = new Web3(Web3.givenProvider || blockchainAddress);
-
-		rootContract = new web3.eth.Contract(avoContract);
-	    rootContract.deploy({data: byteCodeRoot}).send({from: address, gas: 4700000
+		userContract = new web3.eth.Contract(avoContract);
+    userContract.deploy({data: byteCodeRoot, arguments: [key, tuA,nuA,sA,toA,data]}).send({from: keyF, gas: 4700000
 	    	}, function(err, transactionHash){
 	    		if(err){
 	    			console.log("Entré pero hay error");
@@ -145,293 +90,132 @@ function createRootSC(req,fn){
 	}
 }
 
-//Falta implementarla correctamente
-function hasAccess(token,typeOfOperation){
-	var respuesta = false;
-	//Verifies in users microservice if Token has enough permitions
-	var host = 'host.docker.internal';
-	var port = '3001';
-	var path = '/hasAccess';
-	var email = "tuser@algo.com";
-	var url = 'http://'+host+':'+port+''+path+'';
-	axios.post(url, {
-			token: token,
-			typeOfOperation:typeOfOperation
-	})
-	.then(response => {
-			console.log(response.data);
-			respuesta = true;
-			//data = response.data;
-			//next(data, null);
-	})
-	.catch(error => {
-			console.log(error);
-			respuesta=false;
-			//next(null, error);
-	});
-	return respuesta;
-}
 
 
+initializer.findLog=function(req,fn){
 
+	contracts = getContractObject();
+	avoContract = contracts.userSol.User.abi; //it depends of the Contract name
+	byteCodeRoot = contracts.userSol.User.evm.bytecode.object; //it depends of the Contract name
 
+	var Web3 = require('web3');
+	var web3 = new Web3(Web3.givenProvider || blockchainAddress);
 
-
-function audit(X,y,res){
-	//var r=hasAccess(X.body.Token,X.body.typeOfOperation);
-	var r = true;
-	if(r){
-		var obj={
-					Token:X.body.Token,
-					addTran: y.addTran,
-					addCont: y.addCont
+	var addCon 	= req.body.Acs; //'0x4455C1E35e73323b4Ca3B8124FF37A798A1188cF';
+	var addTran = req.body.Atr; //'0x48705215cf5170baaebd6d8ef84482350023bfa6b8e428b5bc6f9028f3cb0dd7';
+	userContract = new web3.eth.Contract(avoContract,addCon);
+	// Working pero regresa todos los logs
+	var allEvents=[];
+	userContract.getPastEvents('Bitacora',{fromBlock: 0, toBlock:'latest'}, function(error, listEvents){ 
+			console.log(listEvents); 
+			allEvents = listEvents;
+			var entro = false;
+			allEvents.forEach(logs => {
+				if(logs.transactionHash==addTran){
+					entro = true;
+					console.log(logs);
+					var resul = {
+						token:req.body.token,
+						log:logs
+					};
+					fn(resul);
+					//break;
+				}	
+			});
+			if(!entro){
+				console.log("Log not found");
+				var resul = {
+					token:req.body.token,
+					log:"Error: not found"
 				};
-	}else {
-		var obj={
-					Error: "Yes",
-					Token:X.body.Token,
-					addTran: "Error",
-					addCont: "Error"
-				};
-	}
-	res.send(obj);
+				fn(resul);
+			}
+		});
+		//--------------------
 }
 
-//Falta implementarla correctamente
-function permit(){
-	//Checar servicio en microservicios Users
-	return 1;
+initializer.deploy=function(req,fn){
+	//It creates a smart contract
+	var obj;
+		createSC(req,function(resul){
+			if(resul=="error"){
+				y="Error";
+				obj={
+						To:req.body.To,
+						Atr:y,
+						Acs:y
+					};
+			}else{
+				obj={
+							To:req.body.To,
+							Atr: resul.addTran,
+							Acs: resul.addCont
+						};
+			}
+			fn(obj);
+		});
+
 }
 
+function addingEventSC(req,fn){
+	console.log("OK: adding Event");
+	var receiptG;
+	contracts = getContractObject();
+	avoContract = contracts.userSol.User.abi; //it depends of the Contract name
+	byteCodeRoot = contracts.userSol.User.evm.bytecode.object; //it depends of the Contract name
 
-function timeStamp(){
-	var today = new Date();
-	dateC=today.toISOString();
-	return dateC;
-}
+	var addCon  = req.body.Asc;
+	var typeEvent = req.body.typeEvent;
+	var source = 	req.body.source;
+	var token = 	req.body.token;
+	var eventDescription = 	req.body.eventDescription;
+	var key = req.body.key;
 
-initializer.createRoot=function(req,res){
-	//Create the root smart contract
-	var y,r=0;
-	createRootSC(req,function(resul){
-		if(resul=="error"){
-			y="Error";
-			r=60;
-		}else{
-			y=resul;
-		}
-		var X = req;
-		if(r==60){
-			r=0;
-			var obj={
-					Tr:"Error",
-					Token:X.body.Token,
-					addTran:y,
-					addCont:y};
-				res.send(obj);
-		}else{
-			//Hacer un deploy para guardar los demás datos en la parte de auditoría
-			r=0;
-			audit(X,y,res);
-		}
-
-	});
-	return r;
-}
-
-
-/*
-initializer.Storing=function(req,res){
-	//We evaluate if some of the parameters are empty
-	//In case, return 10, it indicates an error
-	var r=result.someFieldIsEmpty(req);
-	if (r==0){ //0 means not fields are empty
-		var u = req.body.token;
-		var h = req.body.hash;
-		var t = req.body.typeTransaction;
-		var TS = timeStamp();
-		var id = permit(u,t);
-		//var Tr = audit(u,h,t,TS,id);
-		var resp ={
-			token: u,
-			T: TS,
-			id:id,
-			Tr:Tr};
-			res.send(resp);
-		return resp;
-	}else{
-		return (r);
-	}
-}
-*/
-
-/*
-function createAdmorSC(req,res){
-	//createAdmorSC involves create Admor in database and add it within the root knowledge
-	compiler = require('solc');
-	const fs = require('fs');
-	const rootSol = 'RootSC.sol';
-	sourceCode = fs.readFileSync(rootSol, 'UTF8').toString();
-	const path = require('path');
-	const solc = require('solc');
-	const veh = path.resolve('', '', rootSol);
-	const source = fs.readFileSync(veh, 'UTF-8');
-
-	var input = {
-	    language: 'Solidity',
-	    sources: {
-	        rootSol : {
-	            content: source
-	        }
-	    },
-	    settings: {
-	        outputSelection: {
-	            '*': {
-	                '*': [ '*' ]
-	            }
-	        }
-	    }
-	};
-	compiledCode = JSON.parse(solc.compile(JSON.stringify(input)));
-	contracts = compiledCode.contracts;
-	rContract = contracts.rootSol.RootSC.abi; //it depends of the Contract name
-	byteCodeVeh = contracts.rootSol.RootSC.evm.bytecode.object; //it depends of the Contract name
-
-	addressA = req.body.addressU; //obtain Administrator address
-	addressR = req.body.addressR; //obtain root address
-	addressContract = req.body.addressContract; //obtain Contract Address of the root
-
-	var resultado = 0;
 	try{
 		var Web3 = require('web3');
 		var web3 = new Web3(Web3.givenProvider || blockchainAddress);
+		userContract = new web3.eth.Contract(avoContract,addCon);
+		//userContract = new web3.eth.Contract(avoContract);
 
-		//Adding Administrator in the blockchain*******************************
-		//Object rootContract is created from abi template and the contract address
-		var rootContract = new web3.eth.Contract(rContract, addressContract);
-		rootContract.methods.addAdmor(addressA).send({from: addressR,gas: 4700000},
-			function(err, transactionHash){
-	    		if(err){
-        			res.send(error.jsonResp(60));
-        			return 60;
-	    		}
-	    	})
+		userContract.methods.addEvent(typeEvent,source,token,eventDescription).send({from: key})
 	    	.on('receipt', function(receipt){
-	     		receiptG = receipt;//Getting the receipt of the transaction
-	     		User_.save(req,"No contract address in this transaction",receiptG.transactionHash,statusV.admorCreation,res,4); //add user to the database
-	     		candado=true;
+    			console.log(receipt);
+    			var y={
+					addTran:receipt.transactionHash,
+					addCont:addCon
+				};
+	     		receiptG = y;
+	     		console.log(receiptG);
+	     		fn(receiptG);
 	     	}).on('error', console.error);
-	     //*********************************************************************
 	}catch(err){
-		resultado = 60;
-	}
-
-    return resultado;
-}
-*/
-
-/*
-function getRegister(regS,tok,fn){
-		Token.whoP(tok,function(answer){
-			if(answer.email==""){
-				fn("");
-			}else{
-				regS.email = answer.email;
-				User.find(regS).exec(function(err, users){
-					if(err){
-						fn("");
-					}
-			        if(users.length>0 && users.length<2){
-			        	if(answer.email==users[0].email){ //we check that the token user match with the search
-			        		res = users[0].addressContract;
-	        				var answerR = {	email:users[0].email,
-			                    				addressU:users[0].addressU,
-			                    				addressContract:users[0].addressContract,
-							                    addressTransaction:users[0].addressTransaction,
-			                    				status:users[0].status,
-			                    				token:users[0].token};
-		                    fn(answerR);
-	        			}else{
-	        					fn("");
-        				}
-			        }else{
-						fn("");
-			        }
-			    });
-			}
-		});
-}
-*/
-
-/*
-//Create an administrator
-initializer.AddAdmor=function(req,res){
-	//We evaluate if some of the parameters are empty
-	//In case, return an error
-	var r=result.someFieldIsEmpty(req);
-	if (r==0){
-		//First, we must verify that token is linked with the root
-		//To do tat, we are going to form an objet with the search
-		var search = {email:"",
-					  status:statusV.rootCreation};
-		getRegister(search,req.body.token,function(resultado){
-			if(resultado==""){
-				res.send(error.jsonRespError(4)); //error code is sent as an answer
-			}else{
-				//Avoid that an existence administrator can be duplicated in offchain
-				var searchEmail = {email:req.body.email};
-				User.find(searchEmail).exec(function(err, users){
-					if(err || users.length>0){
-						res.send(error.jsonRespError(20)); //error code is sent as an answer
-					}else{
-						var searchA = {addressU:req.body.addressU};
-						User.find(searchA).exec(function(err, users){
-							if(err || users.length>0){
-								res.send(error.jsonRespError(21)); //error code is sent as an answer
-							}else{
-								//then we must obtain the root address
-								req.body.addressR = resultado.addressU;
-								//and the smart contract address
-								req.body.addressContract = resultado.addressContract;
-								//With all ingredients, we can create the AdmorSC
-								var answer = createAdmorSC(req,res);
-							}
-						});
-					}
-				});
-			}
-		});
-	}else{
-		res.send(error.jsonRespError(r)); //error code is sent as an answer
+		console.log(err);
+		receiptG = "error";
+		fn(receiptG);
 	}
 }
-*/
 
-initializer.createAdmor=function(req,res){
-	var y={
-					addTran:"Not implemented yet",
-					addCont:"Not implemented yet"
-	};
-	var obj={
-			Tr:"Not implemented yet",
-			Token:req.body.Token,
-			y:y
-		};
-	res.send(obj);
+
+initializer.addEvent=function(req,fn){
+	var obj;
+		addingEventSC(req,function(resul){
+			if(resul=="error"){
+				y="Error";
+				obj={
+						token:req.body.token,
+						Atr:y,
+						Acs:y
+					};
+			}else{
+				obj={
+							token:req.body.token,
+							Atr: resul.addTran,
+							Acs: resul.addCont
+						};
+			}
+			fn(obj);
+		});
+
 }
-
-initializer.createTUser=function(req,res){
-	var y={
-					addTran:"Not implemented yet",
-					addCont:"Not implemented yet"
-	};
-	var obj={
-			Tr:"Not implemented yet",
-			Token:req.body.Token,
-			y:y
-		};
-	res.send(obj);
-}
-
 
 module.exports = initializer;

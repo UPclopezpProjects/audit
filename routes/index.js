@@ -20,7 +20,13 @@ router.get('/', event.default);
 //************************************************
 
 //Create users
-router.post('/exec/createUserSC', event.createUser); 
+router.post('/exec/createUser', event.createUser); 
+//Add event
+router.post('/exec/addEvent', event.addEvent); 
 
+
+
+//Looking for logs
+router.get('/get/log', event.getLog);
 
 module.exports = router;
