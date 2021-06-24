@@ -5,7 +5,7 @@ var result = require("../controller/errResulUtils");
 //var Token = require("../controller/token");
 var initializer = {};
 
-var blockchainAddress = "ws://host.docker.internal:7545";
+var blockchainAddress = "http://127.0.0.1:7545";
 
 
 
@@ -117,10 +117,13 @@ function createRootSC(req,fn){
 	//console.log(address);
 	var resultado = 0;
 	try{
+		var ganache = require("ganache-cli");
+		web3.setProvider(ganache.provider());
+
 		var Web3 = require('web3');
 		var ganache = require("ganache");
-		//var web3 = new Web3(Web3.givenProvider || blockchainAddress);
-		var web3 = new Web3(ganache.provider());
+		var web3 = new Web3(Web3.givenProvider || blockchainAddress);
+		//var web3 = new Web3(ganache.provider());
 
 		rootContract = new web3.eth.Contract(avoContract);
 	    rootContract.deploy({data: byteCodeRoot}).send({from: address, gas: 4700000

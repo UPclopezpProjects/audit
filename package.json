@@ -12,6 +12,7 @@
     "debug": "~2.6.9",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
+    "ganache-cli": "^6.12.2",
     "ganache": "^6.4.4",
     "http-errors": "~1.6.3",
     "lodash": "^4.17.21",
