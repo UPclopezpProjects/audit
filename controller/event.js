@@ -29,6 +29,30 @@ initializer.createUser = function (req, res){
 	res.send("Proof");
 }*/
 
+initializer.createRoot = function (req, res){
+	var S = req.body.source;
+	var T = req.body.target;
+	var data = req.body.data;
+	var keyR=req.body.keyR;
+	var Tu = "Root";
+	var To = req.body.To;
+	var obj={body:
+						{
+							S:S,
+							T:T,
+							keyR:keyR,
+							data:data,
+							Tu:Tu,
+							To:To
+						}
+			};
+			sbi.deploy(obj,function(resul){
+				res.send(resul);
+			});
+}
+
+
+
 initializer.createUser = function (req, res){
 	var S = req.body.source;
 	var keyF=req.body.keyF;
@@ -48,7 +72,7 @@ initializer.createUser = function (req, res){
 							To:To
 						}
 			};
-			sbi.deploy(obj,function(resul){
+			sbi.deployUser(obj,function(resul){
 				res.send(resul);
 			});
 }
@@ -56,12 +80,12 @@ initializer.createUser = function (req, res){
 
 initializer.getLog = function (req, res){
 	var Atr = req.body.Atr;
-	var Acs = req.body.Acs;
+	var Asc = req.body.Asc;
 	var token=req.body.token;
 	var obj={body:
 						{
 							Atr:Atr,
-							Acs:Acs,
+							Asc:Asc,
 							token:token
 						}
 			};
@@ -74,6 +98,7 @@ initializer.getLog = function (req, res){
 initializer.addEvent = function (req, res){
 	var typeEvent = req.body.typeEvent;
 	var source = req.body.source;
+	var target = req.body.target;
 	var token = req.body.token;
 	var eventDescription=req.body.eventDescription;
 	var Asc=req.body.Asc;
@@ -83,6 +108,7 @@ initializer.addEvent = function (req, res){
 						{
 							typeEvent:typeEvent,	
 							source:source,
+							target:target,
 							token:token,
 							eventDescription:eventDescription,
 							Asc:Asc,
@@ -91,6 +117,30 @@ initializer.addEvent = function (req, res){
 			};
 	console.log(obj)		
 			sbi.addEvent(obj,function(resul){
+				res.send(resul);
+			});
+}
+
+
+initializer.addAccount = function (req, res){
+	var source = req.body.source;
+	var token = req.body.token;
+	var eventDescription=req.body.eventDescription;
+	var Asc=req.body.Asc;
+	var keyS=req.body.keySender;
+
+	var obj={body:
+						{
+							typeEvent:'POST',	
+							source:source,
+							token:token,
+							eventDescription:eventDescription,
+							Asc:Asc,
+							keyS:keyS
+						}
+			};
+	console.log(obj)		
+			sbi.addAccount(obj,function(resul){
 				res.send(resul);
 			});
 }

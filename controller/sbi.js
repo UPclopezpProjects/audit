@@ -14,10 +14,10 @@ function timeStamp(){
 }
 
 
-function getContractObject(){
+function getContractObject(contractNameSol){
 	var compiler = require('solc');
 	const fs = require('fs');
-	const userSol = 'UserEvents.sol';
+	const userSol = contractNameSol;
 	sourceCode = fs.readFileSync(userSol, 'UTF8').toString();
 	const path = require('path');
 	const solc = require('solc');
@@ -48,7 +48,7 @@ function getContractObject(){
 function createSC(req,fn){
 	console.log("OK");
 	var receiptG;
-	contracts = getContractObject();
+	contracts = getContractObject('UserEvents.sol');
 	avoContract = contracts.userSol.User.abi; //it depends of the Contract name
 	byteCodeRoot = contracts.userSol.User.evm.bytecode.object; //it depends of the Contract name
 
@@ -82,7 +82,60 @@ function createSC(req,fn){
 	     		receiptG = y;
 	     		console.log(receiptG);
 	     		fn(receiptG);
-	     }).on('error', console.error);
+	     }).on('error', function(error, receipt) {
+	     		console.log(error);
+				receiptG = "error";
+				fn(receiptG);	    		
+	     	});
+	}catch(err){
+		resultado = 60;
+		receiptG = "error";
+		fn(receiptG);
+	}
+}
+
+
+//save root in the smart contract
+function createRootSC(req,fn){
+	console.log("OK");
+	var receiptG;
+	contracts = getContractObject('UserEvents.sol');
+	avoContract = contracts.userSol.User.abi; //it depends of the Contract name
+	byteCodeRoot = contracts.userSol.User.evm.bytecode.object; //it depends of the Contract name
+
+	sA = req.body.S;
+	tA = req.body.T;  
+	keyR = req.body.keyR;
+	data = req.body.data; //obtaining public key account
+	tuA = req.body.Tu;
+	toA = req.body.To;
+	var resultado = 0;
+	try{
+		var Web3 = require('web3');
+		var web3 = new Web3(Web3.givenProvider || blockchainAddress);
+		userContract = new web3.eth.Contract(avoContract);
+    	userContract.deploy({data: byteCodeRoot, arguments: [keyR, tuA,sA,tA,toA,data]}).send({from: keyR, gas: 4700000
+	    	}, function(err, transactionHash){
+	    		if(err){
+	    			console.log("Entré pero hay error");
+        			receiptG = "error";
+							fn(receiptG);
+	    		}
+	    	})
+	    	.on('receipt', function(receipt){
+    			console.log("Entré no hay error");
+    			var y={
+					addTran:receipt.transactionHash,
+					addCont:receipt.contractAddress
+				};
+	     		receiptG = y;
+	     		console.log(receiptG);
+	     		fn(receiptG);
+	     }).on('error', function(error, receipt) {
+	     		console.log(error);
+				receiptG = "error";
+				fn(receiptG);	    		
+	     	});
 	}catch(err){
 		resultado = 60;
 		receiptG = "error";
@@ -94,14 +147,14 @@ function createSC(req,fn){
 
 initializer.findLog=function(req,fn){
 
-	contracts = getContractObject();
+	contracts = getContractObject('UserEvents.sol');
 	avoContract = contracts.userSol.User.abi; //it depends of the Contract name
 	byteCodeRoot = contracts.userSol.User.evm.bytecode.object; //it depends of the Contract name
 
 	var Web3 = require('web3');
 	var web3 = new Web3(Web3.givenProvider || blockchainAddress);
 
-	var addCon 	= req.body.Acs; //'0x4455C1E35e73323b4Ca3B8124FF37A798A1188cF';
+	var addCon 	= req.body.Asc; //'0x4455C1E35e73323b4Ca3B8124FF37A798A1188cF';
 	var addTran = req.body.Atr; //'0x48705215cf5170baaebd6d8ef84482350023bfa6b8e428b5bc6f9028f3cb0dd7';
 	userContract = new web3.eth.Contract(avoContract,addCon);
 	// Working pero regresa todos los logs
@@ -134,7 +187,7 @@ initializer.findLog=function(req,fn){
 		//--------------------
 }
 
-initializer.deploy=function(req,fn){
+initializer.deployUser=function(req,fn){
 	//It creates a smart contract
 	var obj;
 		createSC(req,function(resul){
@@ -143,13 +196,13 @@ initializer.deploy=function(req,fn){
 				obj={
 						To:req.body.To,
 						Atr:y,
-						Acs:y
+						Asc:y
 					};
 			}else{
 				obj={
 							To:req.body.To,
 							Atr: resul.addTran,
-							Acs: resul.addCont
+							Asc: resul.addCont
 						};
 			}
 			fn(obj);
@@ -157,10 +210,77 @@ initializer.deploy=function(req,fn){
 
 }
 
+initializer.deploy=function(req,fn){
+	//It creates a smart contract
+	var obj;
+		createRootSC(req,function(resul){
+			if(resul=="error"){
+				y="Error";
+				obj={
+						To:req.body.To,
+						Atr:y,
+						Asc:y
+					};
+			}else{
+				obj={
+							To:req.body.To,
+							Atr: resul.addTran,
+							Asc: resul.addCont
+						};
+			}
+			fn(obj);
+		});
+
+}
+
+
 function addingEventSC(req,fn){
 	console.log("OK: adding Event");
 	var receiptG;
-	contracts = getContractObject();
+	contracts = getContractObject('UserEvents.sol');
+	avoContract = contracts.userSol.User.abi; //it depends of the Contract name
+	byteCodeRoot = contracts.userSol.User.evm.bytecode.object; //it depends of the Contract name
+
+	var addCon  = req.body.Asc;
+	var typeEvent = req.body.typeEvent;
+	var source = 	req.body.source;
+	var target = 	req.body.target;	
+	var token = 	req.body.token;
+	var eventDescription = 	req.body.eventDescription;
+	var key = req.body.key;
+
+	try{
+		var Web3 = require('web3');
+		var web3 = new Web3(Web3.givenProvider || blockchainAddress);
+		userContract = new web3.eth.Contract(avoContract,addCon);
+		//userContract = new web3.eth.Contract(avoContract);
+
+		userContract.methods.addEvent(typeEvent,source,target, token,eventDescription).send({from: key})
+	    	.on('receipt', function(receipt){
+    			console.log(receipt);
+    			var y={
+					addTran:receipt.transactionHash,
+					addCont:addCon
+				};
+	     		receiptG = y;
+	     		console.log(receiptG);
+	     		fn(receiptG);
+	     	}).on('error', function(error, receipt) {
+	     		console.log(error);
+				receiptG = "error";
+				fn(receiptG);	    		
+	     	});
+	}catch(err){
+		console.log(err);
+		receiptG = "error";
+		fn(receiptG);
+	}
+}
+
+function addingAccountSC(req,fn){
+	console.log("OK: adding Account");
+	var receiptG;
+	contracts = getContractObject('EtherOp.sol');
 	avoContract = contracts.userSol.User.abi; //it depends of the Contract name
 	byteCodeRoot = contracts.userSol.User.evm.bytecode.object; //it depends of the Contract name
 
@@ -187,14 +307,17 @@ function addingEventSC(req,fn){
 	     		receiptG = y;
 	     		console.log(receiptG);
 	     		fn(receiptG);
-	     	}).on('error', console.error);
+	     	}).on('error', function(error, receipt) {
+	     		console.log(error);
+				receiptG = "error";
+				fn(receiptG);	    		
+	     	});
 	}catch(err){
 		console.log(err);
 		receiptG = "error";
 		fn(receiptG);
 	}
 }
-
 
 initializer.addEvent=function(req,fn){
 	var obj;
@@ -204,18 +327,46 @@ initializer.addEvent=function(req,fn){
 				obj={
 						token:req.body.token,
 						Atr:y,
-						Acs:y
+						Asc:y
 					};
 			}else{
 				obj={
 							token:req.body.token,
 							Atr: resul.addTran,
-							Acs: resul.addCont
+							Asc: resul.addCont
 						};
 			}
 			fn(obj);
 		});
 
 }
+
+
+initializer.addAccount=function(req,fn){
+	var obj;
+		addingAccountSC(req,function(resul){
+			if(resul=="error"){
+				y="Error";
+				obj={
+						token:req.body.token,
+						Atr: y,
+						Asc: y,
+						pubKey: y,
+						privKey: y
+					};
+			}else{
+				obj={
+							token:req.body.token,
+							Atr: resul.addTran,
+							Asc: resul.addCont,
+							pubKey: resul.pubKey,
+							privKey:resul.privKey
+						};
+			}
+			fn(obj);
+		});
+
+}
+
 
 module.exports = initializer;

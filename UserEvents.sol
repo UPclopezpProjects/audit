@@ -5,7 +5,6 @@ contract User{
     //privates
     address user;  //user address
     string typeUser;
-    string nameUser;
     address father;// creator
     uint idEvents;
 
@@ -14,12 +13,13 @@ contract User{
             uint when, //When: the log is arisen, this is a timestamp
             string typeEvent, //How: type of event (GET, POST, PUT, DELETE)
             string where, //Where: the event was triggered
+            string target, //Where: the event was triggered
             string token, //Who: token used in this event
             string description //What: data description about the log
         );
     
     //public methods
-    constructor(address _user, string memory _typeUser, string memory _nameUser, string memory _source, string memory _token, string memory _data) public{
+    constructor(address _user, string memory _typeUser, string memory _source, string memory _target, string memory _token, string memory _data) public{
         user = _user;//assigning who is the user
         father = msg.sender; //assigning who is the creator
         if(father==user){
@@ -27,10 +27,9 @@ contract User{
         }else{
             typeUser = _typeUser;
         }
-        nameUser = _nameUser;
         idEvents = 0;
         uint now_ = block.timestamp;
-        emit Bitacora(idEvents,now_,"POST",_source,_token,_data);
+        emit Bitacora(idEvents,now_,"POST",_source,_target,_token,_data);
         idEvents++;
     }
    
@@ -66,7 +65,7 @@ contract User{
     function getOwner() public view returns(address){
         return user;
     }
-    function addEvent(string memory typeEvent, string memory _source, string memory _token, string memory eventDescription) public{ //returns(address){
+    function addEvent(string memory typeEvent, string memory _source, string memory _target, string memory _token, string memory eventDescription) public{ //returns(address){
         require(msg.sender == user); //only the user can execute this function
         bool c1=keccak256(abi.encodePacked((typeEvent)))==keccak256(abi.encodePacked(("GET")));
         bool c2=keccak256(abi.encodePacked((typeEvent)))==keccak256(abi.encodePacked(("PUT")));
@@ -74,7 +73,7 @@ contract User{
         bool c4=keccak256(abi.encodePacked((typeEvent)))==keccak256(abi.encodePacked(("DELETE")));
         require(c1 || c2 || c3 || c4);
         uint now_ = block.timestamp;
-        emit Bitacora(idEvents,now_,typeEvent,_source,_token,eventDescription);
+        emit Bitacora(idEvents,now_,typeEvent,_source,_target,_token,eventDescription);
         idEvents++;
     }
     
@@ -82,9 +81,6 @@ contract User{
         return typeUser;
     }
 
-    function getNameUser() public view returns(string memory){
-        return nameUser;
-    }
     function getFather() public view returns(address){
         return father;
     }

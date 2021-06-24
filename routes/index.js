@@ -20,9 +20,13 @@ router.get('/', event.default);
 //************************************************
 
 //Create users
+router.post('/exec/createRoot', event.createRoot); 
+//Create users
 router.post('/exec/createUser', event.createUser); 
 //Add event
 router.post('/exec/addEvent', event.addEvent); 
+//Creat an account
+router.post('/exec/addAccount', event.addAccount); 
 
 
 
